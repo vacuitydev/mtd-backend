@@ -1,0 +1,1 @@
+@py "c:\unoconv\unoconv.py" %*
