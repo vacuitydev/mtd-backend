@@ -10,7 +10,6 @@ import {
   TextRun,
 } from 'docx';
 import { readFileSync, writeFileSync } from 'fs';
-import { Head } from '@nestjs/common';
 
 function flattenArray(arr) {
   // Create an empty array to hold the flattened result
@@ -69,41 +68,51 @@ function tokenToDocxObject(
         return result;
       }
     case 'text':
+      if (token.tokens !== undefined) {
+        return token.tokens.map((_token, index) =>
+          tokenToDocxObject(_token, {...options }),
+        );
+      }
       return new TextRun({
         text: token.text,
         bold: options.bold,
         italics: options.italics,
       });
     case 'em':
-      return token.tokens.map((_token, index) =>
+      return flattenArray( token.tokens.map((_token, index) =>
         tokenToDocxObject(_token, { italics: true, ...options }),
-      );
+      ));
     case 'strong':
-      return token.tokens.map((_token, index) =>
+      return flattenArray(token.tokens.map((_token, index) =>
         tokenToDocxObject(_token, { bold: true, ...options }),
-      );
+      ));
     case 'heading':
       const headingLevel: number = token.depth + options.headingOffset ?? 0;
       return new Paragraph({
         heading: `Heading${headingLevel}` as HeadingLevel,
-        children: token.tokens.map((_token) =>
+        children: flattenArray(token.tokens.map((_token) =>
           tokenToDocxObject(_token, options),
-        ),
+        )),
       });
     case 'list':
       // return token.items.map((v,i)=>new TextRun({text:v}))
       const resultsArray = token.items.map((_token, index) =>
         tokenToDocxObject(_token, options),
       );
-      return resultsArray;
+
+      return flattenArray(resultsArray);
     case 'list_item':
+      const listItems = flattenArray(token.tokens.map((_token) =>
+      tokenToDocxObject(_token, options)
+    ))
+    const reflatted = flattenArray(listItems)
+      console.log("List items", listItems)
+      console.log("Reflatted list items", reflatted)
       return new Paragraph({
         bullet: {
           level: 0,
         },
-        children: token.tokens.map((_token) =>
-          tokenToDocxObject(_token, options),
-        ),
+        children:  reflatted
       });
     case 'space':
       return new Paragraph({ children: [] });
@@ -145,72 +154,72 @@ export async function markdownToDocx(name, experience, debug = false) {
   customText = flattenArray(customText);
   if (debug) console.log('addendum', customText);
   const doc = new Document({
-    styles:{
-      paragraphStyles:[
+    styles: {
+      paragraphStyles: [
         {
-          id: "title",
-          name: "Title",
-          basedOn: "Normal",
-          next: "Heading1",
+          id: 'title',
+          name: 'Title',
+          basedOn: 'Normal',
+          next: 'Heading1',
           quickFormat: true,
           run: {
-              size: 32,
-              bold: true,
-              color: "22eeaa",
+            size: 32,
+            bold: true,
+            color: '22eeaa',
 
-              // type: UnderlineType.DOUBLE,
-              // color: "FF0000",
+            // type: UnderlineType.DOUBLE,
+            // color: "FF0000",
           },
           paragraph: {
-              spacing: {
-                  before: 240,
-                  after: 120
-              },
+            spacing: {
+              before: 240,
+              after: 120,
+            },
           },
         },
         {
-          id: "Heading1",
-          name: "Heading 1",
-          basedOn: "Normal",
-          next: "Heading2",
+          id: 'Heading1',
+          name: 'Heading 1',
+          basedOn: 'Normal',
+          next: 'Heading2',
           quickFormat: true,
           run: {
-              size: 32,
-              bold: true,
-              color: "ee22aa",
+            size: 32,
+            bold: true,
+            color: 'ee22aa',
 
-              // type: UnderlineType.DOUBLE,
-              // color: "FF0000",
+            // type: UnderlineType.DOUBLE,
+            // color: "FF0000",
           },
           paragraph: {
-              spacing: {
-                  before: 240,
-                  after: 120
-              },
+            spacing: {
+              before: 240,
+              after: 120,
+            },
           },
         },
         {
-          id: "Heading2",
-          name: "Heading 2",
-          basedOn: "Normal",
-          next: "Normal",
+          id: 'Heading2',
+          name: 'Heading 2',
+          basedOn: 'Normal',
+          next: 'Normal',
           quickFormat: true,
           run: {
-              size: 26,
-              bold: true,
-              color: "999999",
+            size: 26,
+            bold: true,
+            color: '999999',
 
-              // type: UnderlineType.DOUBLE,
-              // color: "FF0000",
+            // type: UnderlineType.DOUBLE,
+            // color: "FF0000",
           },
           paragraph: {
-              spacing: {
-                  before: 240,
-                  after: 120
-              },
+            spacing: {
+              before: 240,
+              after: 120,
+            },
           },
         },
-      ]
+      ],
     },
 
     sections: [
@@ -224,20 +233,12 @@ export async function markdownToDocx(name, experience, debug = false) {
           }),
           new Paragraph({
             heading: HeadingLevel.HEADING_1,
-            text: "This is an infant docx",
-            alignment: AlignmentType.LEFT
+            text: 'This is an infant docx',
+            alignment: AlignmentType.LEFT,
           }),
           new Paragraph({
-            text: "This docx was generated purely in JS and not patched into a template. Following text is from the user input",
-            alignment: AlignmentType.LEFT
-          }),
-          new Paragraph({
-            text: "Experience",
-            heading: HeadingLevel.HEADING_1
-          }),
-          new Paragraph({
-            alignment: AlignmentType.LEFT
-            children: experienceDocxObjects
+            text: 'This docx was generated purely in JS and not patched into a template. Following text is from the user input',
+            alignment: AlignmentType.LEFT,
           }),
           ...customText,
         ],
@@ -255,7 +256,7 @@ export async function markdownToDocx(name, experience, debug = false) {
 }
 
 export async function patchMarkdownToDocx(name, experience) {
-  console.log("Name", name, "Experience", experience)
+  console.log('Name', name, 'Experience', experience);
   const nameDocxObjects = nameToDocx(name);
   const experienceDocxObjects = experienceToDocx(experience);
 
