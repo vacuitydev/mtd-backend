@@ -1,8 +1,9 @@
-import { IsNotEmpty, IsOptional } from "class-validator";
-
 export class DetailsDTO{
-    @IsNotEmpty()
-    name: string;
-    @IsNotEmpty()
+    name?: string;
     experience?: string;
+    education?: string;
+    skillset?: string;
+    projects?: string;
+    languages?: string;
+    tagline?: string;
 }

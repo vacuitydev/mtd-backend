@@ -1,0 +1,2 @@
+- **Human**: Proficient in English and Japanese
+- **Computer**: Mostly
