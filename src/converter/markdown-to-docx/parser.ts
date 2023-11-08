@@ -26,7 +26,7 @@ import { DetailsDTO } from '../dto';
 //   }
 // }
 // flattenerinator([1,2,3])
-function aggressiveFlattenArray(arr) {
+export function aggressiveFlattenArray(arr) {
   // Create an empty array to hold the flattened result
   const flattened = [];
 
@@ -49,7 +49,7 @@ function aggressiveFlattenArray(arr) {
   return flattened;
 }
 
-interface TokenToDocxOptions {
+export interface TokenToDocxOptions {
   debug?: boolean;
   bold?: boolean;
   ignoreParagraph?: boolean;
@@ -57,7 +57,7 @@ interface TokenToDocxOptions {
   italics?: boolean;
 }
 
-function tokenToDocxObject(
+export function tokenToDocxObject(
   token,
   options: undefined | TokenToDocxOptions = {
     bold: false,
@@ -145,7 +145,7 @@ function tokenToDocxObject(
       break;
   }
 }
-const sectionToDocx = (section, options: TokenToDocxOptions = {}) => {
+export const sectionToDocx = (section, options: TokenToDocxOptions = {}) => {
   if (section === '' || section===undefined) {
     return [
       new Paragraph({
@@ -160,166 +160,5 @@ const sectionToDocx = (section, options: TokenToDocxOptions = {}) => {
   });
   return (sectionDocxObjects = aggressiveFlattenArray(sectionDocxObjects));
 };
-function fillTemplate(detailsDto: DetailsDTO) {
-  // A template is free to fill out the underlying tokens however it pleases for each sections
-  // For example, a template may choose to ignore paragraphing for the name to make sure it is always a certain heading level
-  
-  // This template ignores user paragraphing for the name section
-  const nameDocxObjects = sectionToDocx(detailsDto.name, {
-    ignoreParagraph: true,
-  });
-  const experienceDocxObjects = sectionToDocx(detailsDto.experience);
-  const languagesDocxObjects = sectionToDocx(detailsDto.languages) 
-  const projectsDocxObjects = sectionToDocx(detailsDto.projects) 
-  const educationDocxObjects = sectionToDocx(detailsDto.education, {debug:true})
-  console.log("Education", educationDocxObjects) 
-  const doc = new Document({
-    styles: {
-      paragraphStyles: [
-        {
-          id: 'title',
-          name: 'Title',
-          basedOn: 'Normal',
-          next: 'Heading1',
-          quickFormat: true,
-          run: {
-            size: 32,
-            bold: true,
-            color: '22eeaa',
 
-            // type: UnderlineType.DOUBLE,
-            // color: "FF0000",
-          },
-          paragraph: {
-            spacing: {
-              before: 240,
-              after: 120,
-            },
-          },
-        },
-        {
-          id: 'Heading1',
-          name: 'Heading 1',
-          basedOn: 'Normal',
-          next: 'Heading2',
-          quickFormat: true,
-          run: {
-            size: 32,
-            bold: true,
-            color: 'ee22aa',
-
-            // type: UnderlineType.DOUBLE,
-            // color: "FF0000",
-          },
-          paragraph: {
-            spacing: {
-              before: 240,
-              after: 120,
-            },
-          },
-        },
-        {
-          id: 'Heading2',
-          name: 'Heading 2',
-          basedOn: 'Normal',
-          next: 'Normal',
-          quickFormat: true,
-          run: {
-            size: 26,
-            bold: true,
-            color: '999999',
-
-            // type: UnderlineType.DOUBLE,
-            // color: "FF0000",
-          },
-          paragraph: {
-            spacing: {
-              before: 240,
-              after: 120,
-            },
-          },
-        },
-      ],
-    },
-
-    sections: [
-      {
-        properties: {
-          page: {
-            margin: {
-              top: 250 * 2,
-              bottom: 250 * 2,
-              right: 150 * 2,
-              left: 150 * 2,
-            },
-          },
-        },
-        children: [
-          new Paragraph({
-            heading: HeadingLevel.TITLE,
-            children: [...nameDocxObjects],
-            alignment: AlignmentType.CENTER,
-          }),
-          new Paragraph({
-            heading: HeadingLevel.HEADING_1,
-            text: 'This is an infant docx',
-            alignment: AlignmentType.LEFT,
-          }),
-          new Paragraph({
-            text: 'This docx was generated purely in JS and not patched into a template. Following text is from the user input',
-            alignment: AlignmentType.LEFT,
-          }),
-          new Paragraph({
-            text: 'Experience',
-            alignment: AlignmentType.CENTER,
-            heading: HeadingLevel.HEADING_1,
-          }),
-          ...experienceDocxObjects,
-          new Paragraph({
-            text: 'Languages',
-            alignment: AlignmentType.CENTER,
-            heading: HeadingLevel.HEADING_1,
-          }),
-          ...languagesDocxObjects,
-          
-          new Paragraph({
-            text: 'Projects',
-            alignment: AlignmentType.CENTER,
-            heading: HeadingLevel.HEADING_1,
-          }),
-          ...projectsDocxObjects,
-          new Paragraph({
-            text: 'Education',
-            alignment: AlignmentType.CENTER,
-            heading: HeadingLevel.HEADING_1,
-          }),
-          ...educationDocxObjects,
-          
-        ],
-      },
-    ],
-  });
-  return doc;
-}
-export async function markdownToDocx(detailsDto: DetailsDTO, debug = false) {
-  /* The tokens are of types
-    - paragraph
-    paragraph has a tokens property that contains the children of the paragraph.
-    - heading
-    - text
-    - space
-    - list
-    A list has a sub-array of items, each of which can be their own token types
-    We can work with these
-    */
-  let doc = fillTemplate(detailsDto);
-  const blob = await Packer.toBuffer(doc);
-  // Save for debug purposes, ignore if occupied
-  try {
-    writeFileSync('example.docx', blob);
-  } catch (e) {
-    console.error(e);
-  }
-  return blob;
-}
 

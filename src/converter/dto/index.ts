@@ -1,3 +1,5 @@
+import { IsNotEmpty } from 'class-validator';
+
 export class DetailsDTO{
     name?: string;
     experience?: string;
@@ -6,4 +8,12 @@ export class DetailsDTO{
     projects?: string;
     languages?: string;
     tagline?: string;
+}
+export class CreationRequestDTO{
+    @IsNotEmpty()
+    details: DetailsDTO;
+    @IsNotEmpty()
+    getDocx: boolean;
+    @IsNotEmpty()
+    templateId:number=0;
 }

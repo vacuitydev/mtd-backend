@@ -5,10 +5,7 @@ import { AppModule } from './../src/app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { readFileSync } from 'fs';
 import * as path from 'path';
-import {
-  markdownToDocx,
-  patchMarkdownToDocx,
-} from './../src/converter/markdown-to-docx/parser';
+
 describe('AppController (e2e)', () => {
   let app: INestApplication;
   beforeAll(async () => {
